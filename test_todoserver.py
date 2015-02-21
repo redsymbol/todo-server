@@ -1,15 +1,20 @@
 import unittest
+import json
 import todoserver
+
+def load_json(data):
+    return json.loads(data.decode('utf-8'))
 
 class FlaskTestCase(unittest.TestCase):
     def setUp(self):
         self.app = todoserver.app.test_client()
+        todoserver.store.clear()
 
-class TestEndpointsSimple(FlaskTestCase):
+class TestTodo(FlaskTestCase):
     def test_get_tasks(self):
         resp = self.app.get('/items/')
         self.assertEqual(200, resp.status_code)
-        self.assertEqual(b'GET /items', resp.data)
+        self.assertEqual([], load_json(resp.data))
         
     def test_describe_task(self):
         resp = self.app.get('/items/42/')
@@ -30,3 +35,5 @@ class TestEndpointsSimple(FlaskTestCase):
         resp = self.app.put('/items/42/')
         self.assertEqual(200, resp.status_code)
         self.assertEqual(b'PUT /items/42/', resp.data)
+
+
