@@ -65,7 +65,10 @@ def task_done(task_id):
 @app.route('/items/<task_id>/', methods=['PUT'])
 def update_task(task_id):
     task_id = int(task_id)
-    task = store.tasks[task_id]
+    try:
+        task = store.tasks[task_id]
+    except KeyError:
+        return make_response('', 404)
     data = request.get_json()
     for field in {'summary', 'description'}:
         task[field] = data[field]

@@ -99,3 +99,14 @@ class TestTodo(unittest.TestCase):
         returned = load_json(resp.data)
         self.assertEqual(task_summary2, returned['summary'])
         self.assertEqual(task_description2, returned['description'])
+
+    def test_update_task_not_found_returns_error(self):
+        task_id = 0
+        resp = self.app.put(
+            '/items/{:d}/'.format(task_id),
+            content_type='application/json',
+            data = json.dumps({
+                'summary': 'foo',
+                'description': 'bar',
+        }))
+        self.assertEqual(404, resp.status_code)
