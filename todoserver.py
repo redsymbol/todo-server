@@ -59,13 +59,17 @@ def task_done(task_id):
     task_id = int(task_id)
     if task_id in store.tasks:
         del store.tasks[task_id]
-        return 'OK'
+        return ''
     return make_response('', 404)
 
 @app.route('/items/<task_id>/', methods=['PUT'])
 def update_task(task_id):
-    return 'PUT /items/{}/'.format(task_id)
-
+    task_id = int(task_id)
+    task = store.tasks[task_id]
+    data = request.get_json()
+    for field in {'summary', 'description'}:
+        task[field] = data[field]
+    return ''
 
 if __name__ == '__main__':
     app.run()
