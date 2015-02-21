@@ -2,6 +2,7 @@ import json
 from flask import (
     Flask,
     request,
+    make_response,
     )
 app = Flask(__name__)
 class TaskStore:
@@ -41,7 +42,11 @@ def get_tasks():
 @app.route('/items/<task_id>/', methods=['GET'])
 def describe_task(task_id):
     task_id = int(task_id)
-    return json.dumps(store.tasks[task_id])
+    try:
+        task = store.tasks[task_id]
+    except KeyError:
+            return make_response('', 404)
+    return json.dumps(task)
 
 @app.route('/items/', methods=['POST'])
 def add_task():
@@ -51,7 +56,11 @@ def add_task():
 
 @app.route('/items/<task_id>/', methods=['DELETE'])
 def task_done(task_id):
-    return 'DELETE /items/{}/'.format(task_id)
+    task_id = int(task_id)
+    if task_id in store.tasks:
+        del store.tasks[task_id]
+        return 'OK'
+    return make_response('', 404)
 
 @app.route('/items/<task_id>/', methods=['PUT'])
 def update_task(task_id):

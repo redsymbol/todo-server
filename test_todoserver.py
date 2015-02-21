@@ -17,7 +17,7 @@ class TestTodo(unittest.TestCase):
         self.assertEqual(200, resp.status_code)
         self.assertEqual([], load_json(resp.data))
 
-    def test_add_one_task(self):
+    def test_add_one_task_then_delete(self):
         task_summary = 'Buy milk'
         task_description = 'Lots and lots of delicious milk!'
         # check test assumption
@@ -51,3 +51,18 @@ class TestTodo(unittest.TestCase):
         returned = load_json(resp.data)
         self.assertEqual(1, len(returned))
         self.assertEqual(task_id, returned[0]['id'])
+        # delete this task
+        resp = self.app.delete('/items/{:d}/'.format(task_id))
+        self.assertEqual(200, resp.status_code)
+        #  now it shouldn't exist - by direct lookup...
+        resp = self.app.get('/items/{:d}/'.format(task_id))
+        self.assertEqual(404, resp.status_code)
+        #  or in all items...
+        resp = self.app.get('/items/')
+        self.assertEqual(200, resp.status_code)
+        returned = load_json(resp.data)
+        self.assertEqual(0, len(returned))
+        #  or if we try to delete a second time.
+        resp = self.app.delete('/items/{:d}/'.format(task_id))
+        self.assertEqual(404, resp.status_code)
+        
