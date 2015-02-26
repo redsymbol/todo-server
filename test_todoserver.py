@@ -13,7 +13,7 @@ class TestTodo(unittest.TestCase):
         todoserver.store.clear()
 
     def test_get_empty_task_list(self):
-        resp = self.app.get('/items/')
+        resp = self.app.get('/tasks/')
         self.assertEqual(200, resp.status_code)
         self.assertEqual([], load_json(resp.data))
 
@@ -21,24 +21,24 @@ class TestTodo(unittest.TestCase):
         task_summary = 'Buy milk'
         task_description = 'Lots and lots of delicious milk'
         # check test assumption
-        resp = self.app.get('/items/')
+        resp = self.app.get('/tasks/')
         self.assertEqual(200, resp.status_code)
         self.assertEqual([], load_json(resp.data))
         # add an item
         resp = self.app.post(
-            '/items/',
+            '/tasks/',
             content_type='application/json',
             data = json.dumps({
                 'summary': task_summary,
                 'description': task_description,
         }))
-        self.assertEqual(200, resp.status_code)
+        self.assertEqual(201, resp.status_code)
         returned = load_json(resp.data)
         self.assertEqual(dict, type(returned))
         self.assertIn('id', returned)
         task_id = returned['id']
         # fetch this one task
-        resp = self.app.get('/items/{:d}/'.format(task_id))
+        resp = self.app.get('/tasks/{:d}/'.format(task_id))
         self.assertEqual(200, resp.status_code)
         returned = load_json(resp.data)
         self.assertEqual(dict, type(returned))
@@ -46,24 +46,24 @@ class TestTodo(unittest.TestCase):
         self.assertEqual(task_summary, returned['summary'])
         self.assertEqual(task_description, returned['description'])
         # fetch all tasks
-        resp = self.app.get('/items/')
+        resp = self.app.get('/tasks/')
         self.assertEqual(200, resp.status_code)
         returned = load_json(resp.data)
         self.assertEqual(1, len(returned))
         self.assertEqual(task_id, returned[0]['id'])
         # delete this task
-        resp = self.app.delete('/items/{:d}/'.format(task_id))
+        resp = self.app.delete('/tasks/{:d}/'.format(task_id))
         self.assertEqual(200, resp.status_code)
         #  now it shouldn't exist - by direct lookup...
-        resp = self.app.get('/items/{:d}/'.format(task_id))
+        resp = self.app.get('/tasks/{:d}/'.format(task_id))
         self.assertEqual(404, resp.status_code)
         #  or in all items...
-        resp = self.app.get('/items/')
+        resp = self.app.get('/tasks/')
         self.assertEqual(200, resp.status_code)
         returned = load_json(resp.data)
         self.assertEqual(0, len(returned))
         #  or if we try to delete a second time.
-        resp = self.app.delete('/items/{:d}/'.format(task_id))
+        resp = self.app.delete('/tasks/{:d}/'.format(task_id))
         self.assertEqual(404, resp.status_code)
         
     def test_update_task(self):
@@ -73,19 +73,19 @@ class TestTodo(unittest.TestCase):
         task_description2 = task_description + '!!'
         # add an item
         resp = self.app.post(
-            '/items/',
+            '/tasks/',
             content_type='application/json',
             data = json.dumps({
                 'summary': task_summary,
                 'description': task_description,
         }))
-        self.assertEqual(200, resp.status_code)
+        self.assertEqual(201, resp.status_code)
         returned = load_json(resp.data)
         task_id = returned['id']
 
         # now update it
         resp = self.app.put(
-            '/items/{:d}/'.format(task_id),
+            '/tasks/{:d}/'.format(task_id),
             content_type='application/json',
             data = json.dumps({
                 'summary': task_summary2,
@@ -94,7 +94,7 @@ class TestTodo(unittest.TestCase):
         self.assertEqual(200, resp.status_code)
 
         # refetch and check
-        resp = self.app.get('/items/{:d}/'.format(task_id))
+        resp = self.app.get('/tasks/{:d}/'.format(task_id))
         self.assertEqual(200, resp.status_code)
         returned = load_json(resp.data)
         self.assertEqual(task_summary2, returned['summary'])
@@ -103,10 +103,45 @@ class TestTodo(unittest.TestCase):
     def test_update_task_not_found_returns_error(self):
         task_id = 0
         resp = self.app.put(
-            '/items/{:d}/'.format(task_id),
+            '/tasks/{:d}/'.format(task_id),
             content_type='application/json',
             data = json.dumps({
                 'summary': 'foo',
                 'description': 'bar',
         }))
         self.assertEqual(404, resp.status_code)
+
+    def test_wipe(self):
+        # check test assumption
+        resp = self.app.get('/tasks/')
+        self.assertEqual(200, resp.status_code)
+        self.assertEqual([], load_json(resp.data))
+        # add items
+        resp = self.app.post(
+            '/tasks/',
+            content_type='application/json',
+            data = json.dumps({
+                'summary': 'summary 1',
+                'description': '',
+        }))
+        resp = self.app.post(
+            '/tasks/',
+            content_type='application/json',
+            data = json.dumps({
+                'summary': 'summary 2',
+                'description': '',
+        }))
+        resp = self.app.get('/tasks/')
+        self.assertEqual(200, resp.status_code)
+        returned = load_json(resp.data)
+        self.assertEqual(2, len(returned))
+
+
+        # wipe all
+        resp = self.app.delete('/tasks/ALL/')
+        self.assertEqual(200, resp.status_code)
+
+        resp = self.app.get('/tasks/')
+        self.assertEqual(200, resp.status_code)
+        returned = load_json(resp.data)
+        self.assertEqual(0, len(returned))

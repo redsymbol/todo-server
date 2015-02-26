@@ -33,13 +33,13 @@ class TaskStore:
         
 store = TaskStore()
 
-@app.route('/items/', methods=['GET'])
+@app.route('/tasks/', methods=['GET'])
 def get_tasks():
     return json.dumps([
     {'id': task['id'], 'summary': task['summary']}
         for task in store.all_tasks()])
 
-@app.route('/items/<task_id>/', methods=['GET'])
+@app.route('/tasks/<task_id>/', methods=['GET'])
 def describe_task(task_id):
     task_id = int(task_id)
     try:
@@ -48,13 +48,18 @@ def describe_task(task_id):
             return make_response('', 404)
     return json.dumps(task)
 
-@app.route('/items/', methods=['POST'])
+@app.route('/tasks/', methods=['POST'])
 def add_task():
     data = request.get_json()
     task_id = store.add(data['summary'], data['description'])
-    return json.dumps({'id': task_id})
+    return make_response(json.dumps({'id': task_id}), 201)
 
-@app.route('/items/<task_id>/', methods=['DELETE'])
+@app.route('/tasks/ALL/', methods=['DELETE'])
+def wipe_tasks():
+    store.clear()
+    return ''
+    
+@app.route('/tasks/<task_id>/', methods=['DELETE'])
 def task_done(task_id):
     task_id = int(task_id)
     if task_id in store.tasks:
@@ -62,7 +67,7 @@ def task_done(task_id):
         return ''
     return make_response('', 404)
 
-@app.route('/items/<task_id>/', methods=['PUT'])
+@app.route('/tasks/<task_id>/', methods=['PUT'])
 def update_task(task_id):
     task_id = int(task_id)
     try:
