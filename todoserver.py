@@ -39,9 +39,8 @@ def get_tasks():
     {'id': task['id'], 'summary': task['summary']}
         for task in store.all_tasks()])
 
-@app.route('/tasks/<task_id>/', methods=['GET'])
+@app.route('/tasks/<int:task_id>/', methods=['GET'])
 def describe_task(task_id):
-    task_id = int(task_id)
     try:
         task = store.tasks[task_id]
     except KeyError:
@@ -59,17 +58,15 @@ def wipe_tasks():
     store.clear()
     return ''
     
-@app.route('/tasks/<task_id>/', methods=['DELETE'])
+@app.route('/tasks/<int:task_id>/', methods=['DELETE'])
 def task_done(task_id):
-    task_id = int(task_id)
     if task_id in store.tasks:
         del store.tasks[task_id]
         return ''
     return make_response('', 404)
 
-@app.route('/tasks/<task_id>/', methods=['PUT'])
+@app.route('/tasks/<int:task_id>/', methods=['PUT'])
 def update_task(task_id):
-    task_id = int(task_id)
     try:
         task = store.tasks[task_id]
     except KeyError:
