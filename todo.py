@@ -1,6 +1,7 @@
 import requests
 
 class ApiError(Exception):
+    'Signals an error response from an API call.'
     pass
 
 API_BASE = 'https://todo.example.com'
