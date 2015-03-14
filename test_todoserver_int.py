@@ -1,12 +1,54 @@
 import unittest
 import requests
+import subprocess
+
 import todo
-todo.API_BASE = 'http://127.0.0.1:5000'
+import todoserver
+
+TEST_HOST = '127.0.0.1'
+TEST_PORT = 5003
+todo.API_BASE = 'http://{}:{}'.format(TEST_HOST, TEST_PORT)
+
+import logging
+logging.basicConfig(
+    filename='test.log',
+    level=logging.INFO,
+)
 
 class TestTodo(unittest.TestCase):
     def setUp(self):
+        # start test server
+        self.server = subprocess.Popen([
+            'python',
+            'todoserver.py',
+            '--port',
+            str(TEST_PORT),
+            '--host',
+            TEST_HOST,
+            ])
+        logging.info('Starting test todoserver: %d', self.server.pid)
+        
+        # wait for server to be up and accepting connections
+        max_tries = 3
+        tries = 0
+        while True:
+            try:
+                resp = requests.get(todo.API_BASE + '/tasks/')
+                break
+            except requests.exceptions.ConnectionError:
+                if tries >= max_tries:
+                    raise
+                tries += 1
+        self.assertEqual(200, resp.status_code)
+        
+        # clear storage
         resp = requests.delete(todo.API_BASE + '/tasks/ALL/')
         self.assertEqual(200, resp.status_code)
+
+    def tearDown(self):
+        logging.info('Terminating test todoserver: %d', self.server.pid)
+        self.server.terminate()
+        self.server.wait(1)
         
     def test_get_empty_task_list(self):
         resp = todo.get_tasks()
