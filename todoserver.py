@@ -1,3 +1,4 @@
+import abc
 import argparse
 import json
 from flask import (
@@ -10,10 +11,22 @@ def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--port', default=5000, type=int)
     parser.add_argument('--host', default='127.0.0.1', type=str)
+    parser.add_argument('--store', default=':memory:', choices=[':memory:'],
+                        help='storage backend')
     return parser.parse_args()
 
 app = Flask(__name__)
-class TaskStore:
+
+class TaskStore(metaclass=abc.ABCMeta):
+    @abc.abstractmethod
+    def add(self, summary, description):
+        pass
+    
+    @abc.abstractmethod
+    def all_tasks(self):
+        pass
+
+class MemoryTaskStore(TaskStore):
     def __init__(self):
         self.clear()
 
@@ -38,9 +51,17 @@ class TaskStore:
     def clear(self):
         self._last_id = 0
         self.tasks = {}
-        
-store = TaskStore()
 
+store = None
+
+def init_store(store_type_name):
+    global store
+    store_types = {
+        ':memory:' : MemoryTaskStore,
+        }
+    store_type = store_types[store_type_name]
+    store = store_type()
+        
 @app.route('/tasks/', methods=['GET'])
 def get_tasks():
     return json.dumps([
@@ -86,4 +107,5 @@ def update_task(task_id):
 
 if __name__ == '__main__':
     args = get_args()
+    init_store(args.store)
     app.run(host=args.host, port=args.port)

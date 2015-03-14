@@ -40,10 +40,6 @@ class TestTodo(unittest.TestCase):
                     raise
                 tries += 1
         self.assertEqual(200, resp.status_code)
-        
-        # clear storage
-        resp = requests.delete(todo.API_BASE + '/tasks/ALL/')
-        self.assertEqual(200, resp.status_code)
 
     def tearDown(self):
         logging.info('Terminating test todoserver: %d', self.server.pid)
