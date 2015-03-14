@@ -1,9 +1,17 @@
+import argparse
 import json
 from flask import (
     Flask,
     request,
     make_response,
     )
+
+def get_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--port', default=5000, type=int)
+    parser.add_argument('--host', default='127.0.0.1', type=str)
+    return parser.parse_args()
+
 app = Flask(__name__)
 class TaskStore:
     def __init__(self):
@@ -77,4 +85,5 @@ def update_task(task_id):
     return ''
 
 if __name__ == '__main__':
-    app.run()
+    args = get_args()
+    app.run(host=args.host, port=args.port)
