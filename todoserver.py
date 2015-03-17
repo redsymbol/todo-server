@@ -8,14 +8,6 @@ from flask import (
     make_response,
     )
 
-def get_args():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--port', default=5000, type=int)
-    parser.add_argument('--host', default='127.0.0.1', type=str)
-    parser.add_argument('--store', default='memory', choices=['memory'],
-                        help='storage backend')
-    return parser.parse_args()
-
 app = Flask(__name__)
 
 class TaskStore(metaclass=abc.ABCMeta):
@@ -79,6 +71,15 @@ store_types = {
     'memory' : MemoryTaskStore,
     'sqlite' : SqliteTaskStore,
 }
+
+def get_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--port', default=5000, type=int)
+    parser.add_argument('--host', default='127.0.0.1', type=str)
+    parser.add_argument('--store', default='memory', choices=store_types.keys(),
+                        help='storage backend')
+    return parser.parse_args()
+
 
 def init_store(store_type_name):
     global store
