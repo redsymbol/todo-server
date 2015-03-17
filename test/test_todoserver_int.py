@@ -41,14 +41,16 @@ class TestTodo(unittest.TestCase):
                 break
             except requests.exceptions.ConnectionError:
                 if tries >= max_tries:
-                    self.server.terminate()
-                    self.server.wait(1)
+                    self.terminate_test_server()
                     raise
                 time.sleep(.1)
                 tries += 1
         self.assertEqual(200, resp.status_code)
 
     def tearDown(self):
+        self.terminate_test_server()
+        
+    def terminate_test_server(self):
         logging.info('Terminating test todoserver: %d', self.server.pid)
         self.server.terminate()
         self.server.wait(1)
