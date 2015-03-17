@@ -78,6 +78,7 @@ def get_args():
     parser.add_argument('--host', default='127.0.0.1', type=str)
     parser.add_argument('--store', default='memory', choices=store_types.keys(),
                         help='storage backend')
+    parser.add_argument('--debug', action='store_true', default=False)
     return parser.parse_args()
 
 
@@ -132,4 +133,6 @@ def update_task(task_id):
 if __name__ == '__main__':
     args = get_args()
     init_store(args.store)
+    if args.debug:
+        app.debug = True
     app.run(host=args.host, port=args.port)
