@@ -10,7 +10,7 @@ def load_json(data):
 class TestTodo(unittest.TestCase):
     def setUp(self):
         self.app = todoserver.app.test_client()
-        todoserver.init_store(':memory:')
+        todoserver.init_store('memory')
 
     def test_get_empty_task_list(self):
         resp = self.app.get('/tasks/')

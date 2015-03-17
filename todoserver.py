@@ -1,6 +1,7 @@
 import abc
 import argparse
 import json
+import sqlite3
 from flask import (
     Flask,
     request,
@@ -11,7 +12,7 @@ def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--port', default=5000, type=int)
     parser.add_argument('--host', default='127.0.0.1', type=str)
-    parser.add_argument('--store', default=':memory:', choices=[':memory:'],
+    parser.add_argument('--store', default='memory', choices=['memory'],
                         help='storage backend')
     return parser.parse_args()
 
@@ -46,19 +47,41 @@ class MemoryTaskStore(TaskStore):
         return task_id
 
     def all_tasks(self):
-        return list(self.tasks.values())
+        return iter(self.tasks.values())
 
     def clear(self):
         self._last_id = 0
         self.tasks = {}
 
+class SqliteTaskStore(TaskStore):
+    def __init__(self):
+        self.conn = sqlite3.connect('todoserver.db')
+        self.conn.row_factory = sqlite3.Row
+
+    def add(self, summary, description):
+        cur = self.conn.cursor()
+        cur.execute('INSERT INTO tasks (summary, description) VALUES (?, ?)'
+                    (summary, description))
+        return cur.lastrowid
+
+    def all_tasks(self):
+        cur = self.conn.cursor()
+        cur.execute('select summary, description, rowid as id from tasks')
+        for batch in cur.fetchmany():
+            for row in batch:
+                yield {key: row[key] for key in row.keys()}
+
+    def clear(self):
+        pass
+
 store = None
+store_types = {
+    'memory' : MemoryTaskStore,
+    'sqlite' : SqliteTaskStore,
+}
 
 def init_store(store_type_name):
     global store
-    store_types = {
-        ':memory:' : MemoryTaskStore,
-        }
     store_type = store_types[store_type_name]
     store = store_type()
         
