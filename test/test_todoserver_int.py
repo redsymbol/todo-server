@@ -12,24 +12,30 @@ TEST_PORT = 5003
 todo.API_BASE = 'http://{}:{}'.format(TEST_HOST, TEST_PORT)
 
 logging.basicConfig(
-    filename='test.log',
+    filename='test/log/inttest.log',
     level=logging.INFO,
     filemode='w',
 )
 
 class TestTodo(unittest.TestCase):
     def setUp(self):
+        self._stdout_log = open('test/log/inttest-stdout.log', 'w')
+        self._stderr_log = open('test/log/inttest-stderr.log', 'w')
         # start test server
         self.server = subprocess.Popen([
             'python',
             'todoserver.py',
+            '--debug',
             '--port',
             str(TEST_PORT),
             '--host',
             TEST_HOST,
             '--store',
             'memory',
-            ])
+            ],
+            stdout=self._stdout_log,
+            stderr=self._stderr_log,
+        )
         logging.info('Starting test todoserver: %d', self.server.pid)
         
         # wait for server to be up and accepting connections
