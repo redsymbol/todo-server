@@ -13,6 +13,7 @@ import logging
 logging.basicConfig(
     filename='test.log',
     level=logging.INFO,
+    filemode='w',
 )
 
 class TestTodo(unittest.TestCase):
@@ -25,11 +26,13 @@ class TestTodo(unittest.TestCase):
             str(TEST_PORT),
             '--host',
             TEST_HOST,
+            '--store',
+            'memory',
             ])
         logging.info('Starting test todoserver: %d', self.server.pid)
         
         # wait for server to be up and accepting connections
-        max_tries = 3
+        max_tries = 6
         tries = 0
         while True:
             try:
@@ -38,6 +41,7 @@ class TestTodo(unittest.TestCase):
             except requests.exceptions.ConnectionError:
                 if tries >= max_tries:
                     raise
+                time.sleep(.1)
                 tries += 1
         self.assertEqual(200, resp.status_code)
 
