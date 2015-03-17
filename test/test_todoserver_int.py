@@ -1,6 +1,8 @@
 import unittest
 import requests
 import subprocess
+import logging
+import time
 
 import todo
 import todoserver
@@ -9,7 +11,6 @@ TEST_HOST = '127.0.0.1'
 TEST_PORT = 5003
 todo.API_BASE = 'http://{}:{}'.format(TEST_HOST, TEST_PORT)
 
-import logging
 logging.basicConfig(
     filename='test.log',
     level=logging.INFO,
@@ -40,6 +41,8 @@ class TestTodo(unittest.TestCase):
                 break
             except requests.exceptions.ConnectionError:
                 if tries >= max_tries:
+                    self.server.terminate()
+                    self.server.wait(1)
                     raise
                 time.sleep(.1)
                 tries += 1
