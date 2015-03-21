@@ -1,4 +1,4 @@
-- hosts: apiserver
+- hosts: apiserver-dev
   remote_user: vagrant
   sudo: true
   tasks:
