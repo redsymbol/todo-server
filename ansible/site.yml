@@ -11,12 +11,6 @@
         - apache2-utils
         - git
         - realpath
-    - git:
-        depth: 1
-        dest: /srv/todoapi
-        repo: https://github.com/redsymbol/todo-server.git
-      notify:
-        restart apache
     # Hack to set up 3.4 pyvenv on ubuntu 14.04 - see https://gist.github.com/denilsonsa/21e50a357f2d4920091e
     - script: py34_venv_with_pip.sh /srv/VENV/todoapi creates=/srv/VENV/todoapi
       notify:
