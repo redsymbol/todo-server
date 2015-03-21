@@ -18,12 +18,12 @@
       notify:
         restart apache
     # Hack to set up 3.4 pyvenv on ubuntu 14.04 - see https://gist.github.com/denilsonsa/21e50a357f2d4920091e
-    - script: py34_venv_with_pip.sh /srv/todoapi/venv creates=/srv/todoapi/venv
+    - script: py34_venv_with_pip.sh /srv/VENV/todoapi creates=/srv/VENV/todoapi
       notify:
         restart apache
     - pip:
         requirements: /srv/todoapi/requirements.txt
-        executable: /srv/todoapi/venv/bin/pip
+        executable: /srv/VENV/todoapi/bin/pip
       notify:
         restart apache
     - copy:
