@@ -1,0 +1,38 @@
+- hosts: vm
+  remote_user: vagrant
+  sudo: true
+  tasks:
+    - apt:
+        state: latest
+        name: "{{ item }}"
+      with_items:
+        # apache webserver
+        - apache2-mpm-worker
+        - apache2-utils
+        - git
+        - realpath
+    - git:
+        depth: 1
+        dest: /opt/todo-server
+        repo: https://github.com/redsymbol/todo-server.git
+      notify:
+        restart apache
+    # Hack to set up 3.4 pyvenv on ubuntu 14.04 - see https://gist.github.com/denilsonsa/21e50a357f2d4920091e
+    - script: py34_venv_with_pip.sh /opt/todo-server/venv creates=/opt/todo-server/venv
+      notify:
+        restart apache
+    - pip:
+        requirements: /opt/todo-server/requirements.txt
+        executable: /opt/todo-server/venv/bin/pip
+      notify:
+        restart apache
+    - copy:
+        src: ../vhost.conf
+        dest: /etc/apache2/sites-available/todo-server.vhost
+    - file:
+        state: link
+        src: /etc/apache2/sites-available/todo-server.vhost
+        dest: /etc/apache2/sites-enabled/todo-server.vhost
+  handlers:
+    - name: restart apache
+      service: name=apache2 state=restarted
