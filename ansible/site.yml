@@ -2,7 +2,11 @@
   remote_user: vagrant
   sudo: true
   tasks:
-    - apt:
+    - name: update apt cache
+      apt:
+        update_cache: yes
+    - name: install packages
+      apt:
         state: latest
         name: "{{ item }}"
       with_items:
@@ -11,7 +15,10 @@
         - apache2-utils
         - git
         - realpath
-    # Hack to set up 3.4 pyvenv on ubuntu 14.04 - see https://gist.github.com/denilsonsa/21e50a357f2d4920091e
+
+    - include: wsgi_express.yml
+
+    # todoapi venv
     - script: py34_venv_with_pip.sh /srv/VENV/todoapi creates=/srv/VENV/todoapi
       notify:
         restart apache
@@ -20,13 +27,14 @@
         executable: /srv/VENV/todoapi/bin/pip
       notify:
         restart apache
-    - copy:
-        src: ../vhost.conf
-        dest: /etc/apache2/sites-available/todo-server.vhost
     - file:
         state: link
-        src: /etc/apache2/sites-available/todo-server.vhost
-        dest: /etc/apache2/sites-enabled/todo-server.vhost
+        src: /srv/todoapi/vhost.conf
+        dest: /etc/apache2/sites-available/todo-server.conf
+    - file:
+        state: link
+        src: /etc/apache2/sites-available/todo-server.conf
+        dest: /etc/apache2/sites-enabled/todo-server.conf
   handlers:
     - name: restart apache
       service: name=apache2 state=restarted
