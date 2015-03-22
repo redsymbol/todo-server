@@ -30,7 +30,7 @@
         restart apache
     - file:
         state: link
-        src: /srv/todoapi/vhost.conf
+        src: /srv/todoapi/apache/vhost.conf
         dest: /etc/apache2/sites-available/todo-server.conf
     - file:
         state: link

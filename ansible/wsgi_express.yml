@@ -21,13 +21,13 @@
     - script: /srv/VENV/mod_wsgi/bin/mod_wsgi-express install-module creates=/usr/lib/apache2/modules/mod_wsgi-py34.cpython-34m.so
     - file:
         state: link
-        src: /srv/todoapi/wsgi_express.conf
+        src: /srv/todoapi/apache/wsgi_express.conf
         dest: /etc/apache2/mods-available/wsgi_express.conf
       notify:
         restart apache
     - file:
         state: link
-        src: /srv/todoapi/wsgi_express.load
+        src: /srv/todoapi/apache/wsgi_express.load
         dest: /etc/apache2/mods-available/wsgi_express.load
       notify:
         restart apache
