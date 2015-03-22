@@ -66,7 +66,7 @@ class SqliteTaskStore(TaskStore):
     def clear(self):
         pass
 
-store = None
+store = MemoryTaskStore()
 store_types = {
     'memory' : MemoryTaskStore,
     'sqlite' : SqliteTaskStore,
@@ -132,7 +132,8 @@ def update_task(task_id):
 
 if __name__ == '__main__':
     args = get_args()
-    init_store(args.store)
+    if args.store != 'memory':
+        init_store(args.store)
     if args.debug:
         app.debug = True
     app.run(host=args.host, port=args.port)
