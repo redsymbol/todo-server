@@ -52,7 +52,10 @@ class MemoryTaskStore(TaskStore):
         return task_id
 
     def get_task(self, task_id):
-        return self.tasks[task_id]
+        try:
+            return self.tasks[task_id]
+        except KeyError:
+            return None
 
     def delete_task(self, task_id):
         try:
@@ -62,9 +65,13 @@ class MemoryTaskStore(TaskStore):
             return False
  
     def update_task(self, task_id, summary, description):
-        task = self.tasks[task_id]
+        try:
+            task = self.tasks[task_id]
+        except KeyError:
+            return False
         task['summary'] = summary
         task['description'] = description
+        return True
 
     def all_tasks(self):
         return iter(self.tasks.values())
