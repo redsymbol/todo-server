@@ -1,6 +1,7 @@
 import abc
 import argparse
 import json
+import re
 import psycopg2
 from flask import (
     Flask,
@@ -17,6 +18,14 @@ class TaskStore(metaclass=abc.ABCMeta):
     
     @abc.abstractmethod
     def get_task(self, task_id):
+        pass
+
+    @abc.abstractmethod
+    def delete_task(self, task_id):
+        pass
+
+    @abc.abstractmethod
+    def update_task(self, task_id, summary, description):
         pass
 
     @abc.abstractmethod
@@ -45,6 +54,18 @@ class MemoryTaskStore(TaskStore):
     def get_task(self, task_id):
         return self.tasks[task_id]
 
+    def delete_task(self, task_id):
+        try:
+            del self.tasks[task_id]
+            return True
+        except KeyError:
+            return False
+ 
+    def update_task(self, task_id, summary, description):
+        task = self.tasks[task_id]
+        task['summary'] = summary
+        task['description'] = description
+
     def all_tasks(self):
         return iter(self.tasks.values())
 
@@ -57,7 +78,7 @@ class DbTaskStore(TaskStore):
         self.dsn = 'dbname=todoserver user=www-data'
 
     def add(self, summary, description):
-        insert_stmt = 'INSERT INTO tasks (summary, description) VALUES (?, ?) RETURNING id'
+        insert_stmt = 'INSERT INTO tasks (summary, description) VALUES (%s, %s) RETURNING id'
         with psycopg2.connect(self.dsn) as conn:
             with conn.cursor() as cur:
                 cur.execute(insert_stmt, (summary, description))
@@ -68,12 +89,42 @@ class DbTaskStore(TaskStore):
         cols = (
             'id',
             'summary',
+            'description',
             )
         select_stmt = 'select ' + ','.join(cols) + ' from tasks WHERE id = %s'
         with psycopg2.connect(self.dsn) as conn:
             with conn.cursor() as cur:
                 cur.execute(select_stmt, (task_id,))
-                return dict(zip(cols, cur.fetchone()))
+                row = cur.fetchone()
+                if row is None:
+                    return None
+                return dict(zip(cols, row))
+
+    def update_task(self, task_id, summary, description):
+        fields = [
+            summary,
+            description,
+        ]
+        clauses = [
+            'summary = %s',
+            'description = %s',
+        ]
+        statement = 'UPDATE tasks SET ' + ', '.join(clauses) + ' WHERE id = %s'
+        fields.append(task_id)
+        with psycopg2.connect(self.dsn) as conn:
+            with conn.cursor() as cur:
+                cur.execute(statement, fields)
+                count = _update_count(cur.statusmessage)
+                assert count in {0, 1}, count
+                return count == 1
+        
+    def delete_task(self, task_id):
+        with psycopg2.connect(self.dsn) as conn:
+            with conn.cursor() as cur:
+                cur.execute('DELETE FROM tasks WHERE id = %s', (task_id,))
+                count = _delete_count(cur.statusmessage)
+                assert count in {0, 1}, count
+                return count == 1
 
     def all_tasks(self):
         cols = (
@@ -90,6 +141,16 @@ class DbTaskStore(TaskStore):
 
     def clear(self):
         pass
+
+def _delete_count(statusmessage):
+    match = re.match(r'DELETE (\d+)$', statusmessage)
+    assert match is not None, statusmessage
+    return int(match.group(1))
+
+def _update_count(statusmessage):
+    match = re.match(r'UPDATE (\d+)$', statusmessage)
+    assert match is not None, statusmessage
+    return int(match.group(1))
 
 DEFAULT_STORE = 'db'
 store_types = {
@@ -122,10 +183,9 @@ def get_tasks():
 
 @app.route('/tasks/<int:task_id>/', methods=['GET'])
 def describe_task(task_id):
-    try:
-        task = store.get_task(task_id)
-    except KeyError:
-            return make_response('', 404)
+    task = store.get_task(task_id)
+    if task is None:
+        return make_response('', 404)
     return json.dumps(task)
 
 @app.route('/tasks/', methods=['POST'])
@@ -141,21 +201,18 @@ def wipe_tasks():
     
 @app.route('/tasks/<int:task_id>/', methods=['DELETE'])
 def task_done(task_id):
-    if task_id in store.tasks:
-        del store.tasks[task_id]
+    did_exist = store.delete_task(task_id)
+    if did_exist:
         return ''
     return make_response('', 404)
 
 @app.route('/tasks/<int:task_id>/', methods=['PUT'])
 def update_task(task_id):
-    try:
-        task = store.tasks[task_id]
-    except KeyError:
-        return make_response('', 404)
     data = request.get_json()
-    for field in {'summary', 'description'}:
-        task[field] = data[field]
-    return ''
+    did_update = store.update_task(task_id, data['summary'], data['description'])
+    if did_update:
+        return ''
+    return make_response('', 404)
 
 if __name__ == '__main__':
     args = get_args()
