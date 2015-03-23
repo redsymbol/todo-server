@@ -20,4 +20,5 @@
       owner: todoserver
       state: present
       encoding: 'UTF-8'
-  
+  - name: create initial database tables
+    script: create_todoserver_tables.sh creates=/srv/FLAGS/todoapi/create_initial_db_tables

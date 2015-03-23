@@ -16,6 +16,11 @@
         - git
         - realpath
 
+
+    - file:
+        path: /srv/FLAGS/todoapi
+        state: directory
+
     - include: postgres_setup.yml
     - include: wsgi_express.yml
 
