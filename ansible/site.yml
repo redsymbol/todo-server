@@ -1,3 +1,4 @@
+---
 - hosts: apiserver-dev
   remote_user: vagrant
   sudo: true
@@ -14,9 +15,8 @@
         - apache2-utils
         - git
         - realpath
-        - postgresql-9.3
-        - postgresql-client-9.3
 
+    - include: postgres_setup.yml
     - include: wsgi_express.yml
 
     # todoapi venv
@@ -36,6 +36,7 @@
         state: link
         src: /etc/apache2/sites-available/todo-server.conf
         dest: /etc/apache2/sites-enabled/todo-server.conf
+
   handlers:
     - name: restart apache
       service: name=apache2 state=restarted

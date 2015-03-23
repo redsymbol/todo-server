@@ -1,0 +1,23 @@
+# Note that the postgresql server package install provides the
+# "postgres" user account and group.
+  - name: install packages
+    apt:
+      state: latest
+      name: "{{ item }}"
+    with_items:
+      - postgresql-9.3
+      - postgresql-client-9.3
+      - python-psycopg2 # for ansible itself
+  - name: set up todoserver DB role
+    sudo_user: postgres
+    postgresql_user:
+      name: todoserver
+      password: todoserver
+  - name: set up todoserver DB
+    sudo_user: postgres
+    postgresql_db:
+      name: todoserver
+      owner: todoserver
+      state: present
+      encoding: 'UTF-8'
+  
