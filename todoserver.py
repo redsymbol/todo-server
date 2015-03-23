@@ -1,7 +1,7 @@
 import abc
 import argparse
 import json
-import sqlite3
+import psycopg2
 from flask import (
     Flask,
     request,
@@ -45,38 +45,44 @@ class MemoryTaskStore(TaskStore):
         self._last_id = 0
         self.tasks = {}
 
-class SqliteTaskStore(TaskStore):
+class DbTaskStore(TaskStore):
     def __init__(self):
-        self.conn = sqlite3.connect('todoserver.db')
-        self.conn.row_factory = sqlite3.Row
+        self.dsn = 'dbname=todoapi user=todoserver'
 
     def add(self, summary, description):
-        cur = self.conn.cursor()
-        cur.execute('INSERT INTO tasks (summary, description) VALUES (?, ?)'
-                    (summary, description))
-        return cur.lastrowid
+        insert_stmt = 'INSERT INTO tasks (summary, description) VALUES (?, ?)'
+        with psycopg2.connect(self.dsn) as conn:
+            with conn.cursor() as cur:
+                cur = self.conn.cursor()
+                cur.execute(insert_stmt, (summary, description))
+                task_id = cur.oid
+        return task_id
 
     def all_tasks(self):
-        cur = self.conn.cursor()
-        cur.execute('select summary, description, rowid as id from tasks')
-        for batch in cur.fetchmany():
-            for row in batch:
-                yield {key: row[key] for key in row.keys()}
+        select_stmt = 'select summary, description, rowid as id from tasks'
+        with psycopg2.connect(self.dsn) as conn:
+            with conn.cursor() as cur:
+                cur.execute(select_stmt)
+                for batch in cur.fetchmany():
+                    for row in batch:
+                        yield {key: row[key] for key in row.keys()}
 
     def clear(self):
         pass
 
-store = MemoryTaskStore()
+DEFAULT_STORE = 'db'
 store_types = {
-    'memory' : MemoryTaskStore,
-    'sqlite' : SqliteTaskStore,
+    'memory': MemoryTaskStore,
+    'db': DbTaskStore,
 }
+assert DEFAULT_STORE in store_types
+store = store_types[DEFAULT_STORE]()
 
 def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--port', default=5000, type=int)
     parser.add_argument('--host', default='127.0.0.1', type=str)
-    parser.add_argument('--store', default='memory', choices=store_types.keys(),
+    parser.add_argument('--store', default=DEFAULT_STORE, choices=store_types.keys(),
                         help='storage backend')
     parser.add_argument('--debug', action='store_true', default=False)
     return parser.parse_args()
