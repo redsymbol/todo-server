@@ -16,6 +16,10 @@ class TaskStore(metaclass=abc.ABCMeta):
         pass
     
     @abc.abstractmethod
+    def get_task(self, task_id):
+        pass
+
+    @abc.abstractmethod
     def all_tasks(self):
         pass
 
@@ -38,6 +42,9 @@ class MemoryTaskStore(TaskStore):
         self.tasks[task_id] = task
         return task_id
 
+    def get_task(self, task_id):
+        return self.tasks[task_id]
+
     def all_tasks(self):
         return iter(self.tasks.values())
 
@@ -47,25 +54,39 @@ class MemoryTaskStore(TaskStore):
 
 class DbTaskStore(TaskStore):
     def __init__(self):
-        self.dsn = 'dbname=todoapi user=todoserver'
+        self.dsn = 'dbname=todoserver user=www-data'
 
     def add(self, summary, description):
-        insert_stmt = 'INSERT INTO tasks (summary, description) VALUES (?, ?)'
+        insert_stmt = 'INSERT INTO tasks (summary, description) VALUES (?, ?) RETURNING id'
         with psycopg2.connect(self.dsn) as conn:
             with conn.cursor() as cur:
-                cur = self.conn.cursor()
                 cur.execute(insert_stmt, (summary, description))
-                task_id = cur.oid
+                task_id = cur.fetchone()[0]
         return task_id
 
+    def get_task(self, task_id: int):
+        cols = (
+            'id',
+            'summary',
+            )
+        select_stmt = 'select ' + ','.join(cols) + ' from tasks WHERE id = %s'
+        with psycopg2.connect(self.dsn) as conn:
+            with conn.cursor() as cur:
+                cur.execute(select_stmt, (task_id,))
+                return dict(zip(cols, cur.fetchone()))
+
     def all_tasks(self):
-        select_stmt = 'select summary, description, rowid as id from tasks'
+        cols = (
+            'id',
+            'summary',
+            'description',
+            )
+        select_stmt = 'select ' + ','.join(cols) + ' from tasks'
         with psycopg2.connect(self.dsn) as conn:
             with conn.cursor() as cur:
                 cur.execute(select_stmt)
-                for batch in cur.fetchmany():
-                    for row in batch:
-                        yield {key: row[key] for key in row.keys()}
+                for row in cur:
+                    yield dict(zip(cols, row))
 
     def clear(self):
         pass
@@ -102,7 +123,7 @@ def get_tasks():
 @app.route('/tasks/<int:task_id>/', methods=['GET'])
 def describe_task(task_id):
     try:
-        task = store.tasks[task_id]
+        task = store.get_task(task_id)
     except KeyError:
             return make_response('', 404)
     return json.dumps(task)
