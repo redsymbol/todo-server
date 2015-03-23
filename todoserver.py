@@ -140,7 +140,9 @@ class DbTaskStore(TaskStore):
                     yield dict(zip(cols, row))
 
     def clear(self):
-        pass
+        with psycopg2.connect(self.dsn) as conn:
+            with conn.cursor() as cur:
+                cur.execute('DELETE FROM tasks')
 
 def _delete_count(statusmessage):
     match = re.match(r'DELETE (\d+)$', statusmessage)
