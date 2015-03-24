@@ -225,7 +225,7 @@ def update_task(task_id):
 
 if __name__ == '__main__':
     args = get_args()
-    if args.store != 'memory':
+    if args.store == 'memory':
         init_store(args.store)
     if args.debug:
         app.debug = True
