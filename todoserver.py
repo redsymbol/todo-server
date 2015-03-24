@@ -34,7 +34,7 @@ class TaskStore(metaclass=abc.ABCMeta):
 
 class MemoryTaskStore(TaskStore):
     def __init__(self):
-        self.clear()
+        self._init_store()
 
     def new_id(self):
         id = self._last_id
@@ -78,9 +78,13 @@ class MemoryTaskStore(TaskStore):
 
     def clear(self):
         cleared = len(self.tasks)
+        self._init_store()
+        return cleared
+
+    def _init_store(self):
         self._last_id = 0
         self.tasks = {}
-        return cleared
+        
 
 class DbTaskStore(TaskStore):
     def __init__(self):
