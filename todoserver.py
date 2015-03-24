@@ -77,8 +77,10 @@ class MemoryTaskStore(TaskStore):
         return iter(self.tasks.values())
 
     def clear(self):
+        cleared = len(self.tasks)
         self._last_id = 0
         self.tasks = {}
+        return cleared
 
 class DbTaskStore(TaskStore):
     def __init__(self):
@@ -150,6 +152,8 @@ class DbTaskStore(TaskStore):
         with psycopg2.connect(self.dsn) as conn:
             with conn.cursor() as cur:
                 cur.execute('DELETE FROM tasks')
+                count = _delete_count(cur.statusmessage)
+        return count
 
 def _delete_count(statusmessage):
     match = re.match(r'DELETE (\d+)$', statusmessage)
@@ -205,8 +209,8 @@ def add_task():
 
 @app.route('/tasks/ALL/', methods=['DELETE'])
 def wipe_tasks():
-    store.clear()
-    return ''
+    deleted = store.clear()
+    return make_response(json.dumps({'deleted': deleted}), 200)
     
 @app.route('/tasks/<int:task_id>/', methods=['DELETE'])
 def task_done(task_id):

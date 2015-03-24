@@ -30,3 +30,6 @@ def update_task(task_id, summary, description):
         'summary': summary,
         'description': description,
         })
+
+def clear():
+    return requests.delete(_url('/tasks/ALL/'))
