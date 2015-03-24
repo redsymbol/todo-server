@@ -55,6 +55,8 @@ class TestTodo(unittest.TestCase):
 
     def tearDown(self):
         self.terminate_test_server()
+        self._stdout_log.close()
+        self._stderr_log.close()
         
     def terminate_test_server(self):
         logging.info('Terminating test todoserver: %d', self.server.pid)
