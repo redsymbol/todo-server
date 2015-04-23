@@ -4,12 +4,9 @@
   remote_user: vagrant
   sudo: true
   tasks:
-    - name: update apt cache
-      apt:
-        update_cache: yes
     - name: install and update packages
       apt:
-        state: latest
+        state: present
         name: "{{ item }}"
       with_items:
         - apache2-mpm-worker

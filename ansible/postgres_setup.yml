@@ -2,7 +2,7 @@
 # "postgres" user account and group.
   - name: install packages
     apt:
-      state: latest
+      state: present
       name: "{{ item }}"
     with_items:
       - postgresql-9.3

@@ -2,7 +2,7 @@
 # see http://askubuntu.com/questions/569550/assertionerror-using-apache2-and-libapache2-mod-wsgi-py3-on-ubuntu-14-04-python
     - name: install packages for wsgi_express
       apt:
-        state: latest
+        state: present
         name: "{{ item }}"
       with_items:
         # for wsgi_express
