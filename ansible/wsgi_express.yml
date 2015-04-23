@@ -18,7 +18,10 @@
     - pip:
         name: mod_wsgi
         executable: /srv/VENV/mod_wsgi/bin/pip
-    - script: /srv/VENV/mod_wsgi/bin/mod_wsgi-express install-module creates=/usr/lib/apache2/modules/mod_wsgi-py34.cpython-34m.so
+    - name: Creating mod_wsgi .so apache module
+      command: /srv/VENV/mod_wsgi/bin/mod_wsgi-express install-module
+      args:
+        creates: /usr/lib/apache2/modules/mod_wsgi-py34.cpython-34m.so
     - file:
         state: link
         src: /srv/todoapi/apache/wsgi_express.conf

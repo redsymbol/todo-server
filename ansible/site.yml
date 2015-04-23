@@ -1,12 +1,13 @@
 ---
-- hosts: apiserver-dev
+- name: todo server
+  hosts: apiserver-dev
   remote_user: vagrant
   sudo: true
   tasks:
     - name: update apt cache
       apt:
         update_cache: yes
-    - name: install packages
+    - name: install and update packages
       apt:
         state: latest
         name: "{{ item }}"
@@ -17,7 +18,8 @@
         - realpath
 
 
-    - file:
+    - name: Deploy directory exists
+      file:
         path: /srv/FLAGS/todoapi
         state: directory
 
@@ -25,22 +27,30 @@
     - include: wsgi_express.yml
 
     # todoapi venv
-    - script: py34_venv_with_pip.sh /srv/VENV/todoapi creates=/srv/VENV/todoapi
+    - name: todo-server virtual environment exists
+      script: py34_venv_with_pip.sh /srv/VENV/todoapi creates=/srv/VENV/todoapi
       notify:
-        restart apache
-    - pip:
+        - restart apache
+    - name: todo-server venv requirements satisfied
+      pip:
         requirements: /srv/todoapi/requirements.txt
         executable: /srv/VENV/todoapi/bin/pip
       notify:
         restart apache
-    - file:
+    - name: todo-server vhost available
+      file:
         state: link
         src: /srv/todoapi/apache/vhost.conf
         dest: /etc/apache2/sites-available/todo-server.conf
-    - file:
+      notify:
+        - restart apache
+    - name: todo-server vhost enabled
+      file:
         state: link
         src: /etc/apache2/sites-available/todo-server.conf
         dest: /etc/apache2/sites-enabled/todo-server.conf
+      notify:
+        - restart apache
 
   handlers:
     - name: restart apache
