@@ -3,6 +3,7 @@
   hosts: apiserver-dev
   remote_user: vagrant
   sudo: true
+  gather_facts: no
   tasks:
     - name: install and update packages
       apt:
