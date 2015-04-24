@@ -1,16 +1,21 @@
 ---
 - name: todo server
   hosts: apiserver-dev
+  roles:
+    - wsgiexpress
   remote_user: vagrant
   sudo: true
   gather_facts: no
+  pre_tasks:
+    - apt:
+        state: present
+        name: apache2-mpm-worker
   tasks:
     - name: install and update packages
       apt:
         state: present
         name: "{{ item }}"
       with_items:
-        - apache2-mpm-worker
         - apache2-utils
         - git
         - realpath
@@ -22,7 +27,6 @@
         state: directory
 
     - include: postgres_setup.yml
-    - include: wsgi_express.yml
 
     # todoapi venv
     - name: todo-server virtual environment exists
