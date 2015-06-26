@@ -9,3 +9,5 @@ pip install -r requirements.txt
 deactivate
 cd ..
 
+cd vm
+vagrant up
