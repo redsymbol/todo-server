@@ -9,3 +9,4 @@ source venv/bin/activate
 pip install -r requirements.txt
 cd ../vm
 vagrant up
+vagrant provision
