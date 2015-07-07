@@ -8,6 +8,9 @@
   gather_facts: no
   pre_tasks:
     - apt:
+        update_cache: yes
+        upgrade: full
+    - apt:
         state: present
         name: apache2-mpm-worker
   tasks:
