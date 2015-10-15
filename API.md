@@ -5,18 +5,18 @@ bodies are JSON. All actions that take a request body are JSON (not
 form-encoded).
 
 <dl>
-    <dt>GET /tasks</dt>
+    <dt>GET /tasks/</dt>
 
     <dd>Return a list of tasks on the todo list, in the format {"id":
     &lt;item_id&gt;, "summary": &lt;one-line summary&gt;}</dd>
 
-    <dt>GET /tasks/&lt;item_id&gt;</dt>
+    <dt>GET /tasks/&lt;item_id&gt;/</dt>
 
     <dd>Fetch all available information for a specific todo item, in
     the format {"id": &lt;item_id&gt;, "summary": &lt;one-line
     summary&gt;, "description" : &lt;free-form text field&gt;}</dd>
 
-    <dt>POST /tasks</dt>
+    <dt>POST /tasks/</dt>
     
     <dd>Create a new todo item. The POST body is a JSON object with
     two fields: "summary" (must be under 120 characters, no newline),
@@ -24,12 +24,12 @@ form-encoded).
     object with one field: the id created by the server. On success,
     return 201 status.</dd>
 
-    <dt>DELETE /tasks/&lt;item_id&gt;</dt>
+    <dt>DELETE /tasks/&lt;item_id&gt;/</dt>
 
     <dd>Mark the item as done. (I.e., strike it off the list, so GET
     /tasks will not show it.) The response body is empty.</dd>
 
-    <dt>PUT /tasks/&lt;item_id&gt;</dt>
+    <dt>PUT /tasks/&lt;item_id&gt;/</dt>
 
     <dd>Modify an existing task. The PUT body is a JSON object with
     two fields: "summary" (must be under 120 characters, no newline),
