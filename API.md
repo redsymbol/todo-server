@@ -8,12 +8,12 @@ form-encoded).
     <dt>GET /tasks/</dt>
 
     <dd>Return a list of tasks on the todo list, in the format {"id":
-    &lt;item_id&gt;, "summary": &lt;one-line summary&gt;}</dd>
+    &lt;task_id&gt;, "summary": &lt;one-line summary&gt;}</dd>
 
-    <dt>GET /tasks/&lt;item_id&gt;/</dt>
+    <dt>GET /tasks/&lt;task_id&gt;/</dt>
 
     <dd>Fetch all available information for a specific todo item, in
-    the format {"id": &lt;item_id&gt;, "summary": &lt;one-line
+    the format {"id": &lt;task_id&gt;, "summary": &lt;one-line
     summary&gt;, "description" : &lt;free-form text field&gt;}</dd>
 
     <dt>POST /tasks/</dt>
@@ -24,12 +24,12 @@ form-encoded).
     object with one field: the id created by the server. On success,
     return 201 status.</dd>
 
-    <dt>DELETE /tasks/&lt;item_id&gt;/</dt>
+    <dt>DELETE /tasks/&lt;task_id&gt;/</dt>
 
     <dd>Mark the item as done. (I.e., strike it off the list, so GET
     /tasks will not show it.) The response body is empty.</dd>
 
-    <dt>PUT /tasks/&lt;item_id&gt;/</dt>
+    <dt>PUT /tasks/&lt;task_id&gt;/</dt>
 
     <dd>Modify an existing task. The PUT body is a JSON object with
     two fields: "summary" (must be under 120 characters, no newline),
