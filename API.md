@@ -4,6 +4,8 @@ body is empty unless specified otherwise. All non-empty response
 bodies are JSON. All actions that take a request body are JSON (not
 form-encoded).
 
+Task IDs are unique integers, 1 or greater.
+
 <dl>
     <dt>GET /tasks/</dt>
 
